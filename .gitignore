@@ -8,8 +8,8 @@ obj/
 *.suo
 
 # Settings 
-#appsettings.json
-#appsettings.*.json
+appsettings.json
+appsettings.*.json
 
 # System
 .DS_Store
