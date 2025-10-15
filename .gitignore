@@ -1,0 +1,15 @@
+# Compile
+bin/
+obj/
+
+# IDE/Edit
+.vs/
+*.user
+*.suo
+
+# Settings 
+#appsettings.json
+#appsettings.*.json
+
+# System
+.DS_Store
