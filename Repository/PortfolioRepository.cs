@@ -29,7 +29,15 @@ namespace api.Repository
                 Industry = stock.Stock.Industry,
                 MarketCap = stock.Stock.MarketCap
             }).ToListAsync();
-            
+
+        }
+
+        public async Task<Portfolio> CreateAsync(Portfolio portfolio)
+        {
+            await _dbContext.Portfolios.AddAsync(portfolio);
+            await _dbContext.SaveChangesAsync();
+
+            return portfolio;
         }
     }
 }

@@ -58,6 +58,16 @@ namespace api.Repository
             return await _context.Stocks.Include( x => x.Comments).FirstOrDefaultAsync(x => x.Id == id);//FindAsync is not allowed to use it with INCLUDE 
         }
 
+        public async Task<Stock?> GetBySymbolAsync(string? symbol)
+        {
+            var x = await _context.Stocks.FirstOrDefaultAsync(x => x.Symbol == symbol);
+            if (x == null)
+            {
+                return null;
+            }
+            return x;
+        }
+
         public async Task<Stock> CreateAsync(Stock stockModel)
         {
             await _context.Stocks.AddAsync(stockModel);
