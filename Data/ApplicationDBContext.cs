@@ -20,10 +20,27 @@ namespace api.Data
         public DbSet<Stock> Stocks { get; set; } // DbSet is used to manipulate the tables
         public DbSet<Comment> Comments { get; set; }
 
+        public DbSet<Portfolio> Portfolios { get; set; }
+
         #region identity Roles Implementation for the DB to Register Users
         protected override void OnModelCreating(ModelBuilder builder)//OnModelCreating belongs to Identity library
         {
             base.OnModelCreating(builder);
+            builder.Entity<Portfolio>(x => x.HasKey(p => new { p.AppUserId, p.StockId }));//here we define the PK that is combined PK 
+
+            //We connect here to the tables defining the FK and the cardinality
+            builder.Entity<Portfolio>()
+                .HasOne(u => u.AppUser)
+                .WithMany(u => u.Portfolios)
+                .HasForeignKey(u => u.AppUserId);
+
+            builder.Entity<Portfolio>()
+                .HasOne(u => u.Stock)
+                .WithMany(u => u.Portfolios)
+                .HasForeignKey(u => u.StockId);
+
+
+
             //We define here the types of roles that we are going to use
             List<IdentityRole> roles = new List<IdentityRole>
             {
