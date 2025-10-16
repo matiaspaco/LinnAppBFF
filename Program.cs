@@ -105,6 +105,10 @@ builder.Services.AddScoped<ICommentRepository, CommentRepository>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 #endregion
 
+#region Dependency injection to work with Repository pattern for the Repository table
+builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();   
+#endregion
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
