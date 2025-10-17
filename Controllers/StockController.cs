@@ -31,9 +31,9 @@ namespace api.Controllers
         {
             // var stocks = await _context.Stocks.ToListAsync();
             var stocks = await _stockRepository.GetAllAsync(query);//Now with the Queryble we can also use this parameter allowing in the function add more parameters to filter usinf for example swagger
-            var stockDto = stocks.Select(s => s.ToStockDto());
+            var stockDto = stocks.Select(s => s.ToStockDto()).ToList();
 
-            return Ok(stocks);
+            return Ok(stockDto);
         }
 
         [HttpGet("{id:int}")]

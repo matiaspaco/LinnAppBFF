@@ -4,10 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
 using api.Dtos.Comment;
+using api.Extensions;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;
 using api.Repository;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace api.Controllers
@@ -22,11 +24,14 @@ namespace api.Controllers
         private readonly ICommentRepository _commentRepository;
         private readonly IStockRepository _stockRepository;
 
-        public CommentController(ApplicationDBContext context, ICommentRepository commentRepository, IStockRepository stockRepository)
+        private readonly UserManager<AppUser> _userManager;
+
+        public CommentController(ApplicationDBContext context, ICommentRepository commentRepository, IStockRepository stockRepository, UserManager<AppUser> appUser)
         {
             _context = context;
             _commentRepository = commentRepository;
             _stockRepository = stockRepository;
+            _userManager = appUser;
         }
 
         [HttpGet]
@@ -62,6 +67,7 @@ namespace api.Controllers
 
         public async Task<IActionResult> Create([FromRoute] int stockId, CreateCommentRequestDto createComment)
         {
+
             if (!ModelState.IsValid)//Controller Base provide the modelState and it has the porpuse of verify if all the Data Anotations Validations are ok or not 
             {
                 return BadRequest(ModelState);
@@ -71,10 +77,18 @@ namespace api.Controllers
             {
                 return BadRequest("Stock doesn't exist. ");
             }
-            var createCommentmodel = createComment.ToCommentFromCreate(stockId);
+
+            var appUserz = User.GetUserName();
+            var userManager = await _userManager.FindByNameAsync(appUserz);
+            if (userManager == null)
+            {
+                return BadRequest("User doesn't exists.");
+            }
+
+            var createCommentmodel = createComment.ToCommentFromCreate(stockId, userManager.Id);
             await _commentRepository.CreateAsync(createCommentmodel);
 
-            return CreatedAtAction(nameof(GetById), new { id = createCommentmodel }, createCommentmodel.ToCommentDto());
+            return CreatedAtAction(nameof(GetById), new { id = createCommentmodel.Id }, createCommentmodel.ToCommentDto());
         }
 
         [HttpDelete]

@@ -20,13 +20,14 @@ namespace api.Repository
         }
         public async Task<List<Comment>> GetAllAsync()
         {
-            return await _context.Comments.ToListAsync();
+            return await _context.Comments.Include( x => x.appUser).ToListAsync();//Include allow us to bring the data from the other relationed table in this case AppUser
         }
 
         public async Task<Comment?> GetByIdAsync(int id)
         {
 
-            var commentModel = await _context.Comments.FindAsync(id);
+            // var commentModel = await _context.Comments.FindAsync(id);
+            var commentModel = await _context.Comments.Include(x => x.appUser).FirstOrDefaultAsync( x => x.Id == id);//Include allow us to bring the data from the other relationed table in this case Appuser table data
             if (commentModel == null)
             {
                 return null;
@@ -61,7 +62,8 @@ namespace api.Repository
 
         public async Task<Comment?> UpdateAsync(int id, Comment commentModel)
         {
-            var commentx = await _context.Comments.FindAsync(id);
+            // var commentx = await _context.Comments.FindAsync(id);
+            var commentx = await _context.Comments.Include(x => x.appUser).FirstOrDefaultAsync(x => x.Id == id);//was required to add the includesince we have the CommentDTO modified and access to a nest value in AppUser
             if (commentx == null)
             {
                 return null;

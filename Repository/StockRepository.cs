@@ -22,7 +22,8 @@ namespace api.Repository
         public async Task<List<Stock>> GetAllAsync(QueryObjects query)
         {
             // return await _context.Stocks.Include(x => x.Comments).ToListAsync();//INCLUDES APPLIED TO GET ALSO THE COMMENTS THAT COMES FROM ANOTHER ENDPOINT
-            var stocks = _context.Stocks.Include(x => x.Comments).AsQueryable();//New sintax to use the queryble filter 
+            // var stocks = _context.Stocks.Include(x => x.Comments).AsQueryable();//New sintax to use the queryble filter 
+            var stocks = _context.Stocks.Include(x => x.Comments).ThenInclude(x => x.appUser).AsQueryable();//We also added the then include which allow us to show the nested data from the relationship for example stock (father tree)-> comments (first nest) -> AppUser(nest inside comment that is a son of stock)
             if (!string.IsNullOrWhiteSpace(query.CompanyName))
             {
                 stocks = stocks.Where(x => x.CompanyName.Contains(query.CompanyName));
