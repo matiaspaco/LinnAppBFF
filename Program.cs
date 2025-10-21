@@ -106,7 +106,15 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 #endregion
 
 #region Dependency injection to work with Repository pattern for the Repository table
-builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();   
+builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
+#endregion
+
+#region Dependency to connect the FMPService with the IFMPService
+builder.Services.AddScoped<IFMPService, FMPService>();
+#endregion
+
+#region Dependency injection to use the HTTP funcionality at the moment the service call the external endpoint FMPService
+builder.Services.AddHttpClient<IFMPService, FMPService>();  
 #endregion
 
 var app = builder.Build();

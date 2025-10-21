@@ -27,13 +27,27 @@ namespace api.Mappers
 
         public static Stock ToStockFromCreateDTO(this CreateStockRequestDto stockDto)
         {
-            return new Stock{
+            return new Stock
+            {
                 Symbol = stockDto.Symbol,
                 CompanyName = stockDto.CompanyName,
                 Purchase = stockDto.Purchase,
                 LastDiv = stockDto.LastDiv,
                 Industry = stockDto.Industry,
                 MarketCap = stockDto.MarketCap
+            };
+        }
+        
+
+        public static Stock ToStockFromFMPStockDTO(this FMPStockDto stockDto)
+        {
+            return new Stock{
+                Symbol = stockDto.symbol,
+                CompanyName = stockDto.companyName,
+                Purchase = (decimal)stockDto.price,
+                LastDiv = (decimal)stockDto.lastDividend,
+                Industry = stockDto.industry,
+                MarketCap = stockDto.marketCap
             };
         }
     }

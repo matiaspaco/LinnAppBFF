@@ -26,12 +26,15 @@ namespace api.Controllers
 
         private readonly UserManager<AppUser> _userManager;
 
-        public CommentController(ApplicationDBContext context, ICommentRepository commentRepository, IStockRepository stockRepository, UserManager<AppUser> appUser)
+        private readonly IFMPService _FMPService;
+
+        public CommentController(ApplicationDBContext context, ICommentRepository commentRepository, IStockRepository stockRepository, UserManager<AppUser> appUser, IFMPService FMPService)
         {
             _context = context;
             _commentRepository = commentRepository;
             _stockRepository = stockRepository;
             _userManager = appUser;
+            _FMPService = FMPService;
         }
 
         [HttpGet]
@@ -63,19 +66,30 @@ namespace api.Controllers
             return Ok(commentModel.ToCommentDto());
         }
 
-        [HttpPost("{stockId:int}")]
+        // [HttpPost("{stockId:int}")]
+        [HttpPost("{symbol:alpha}")]//The alpha here is added to restrict in this case allows the upper and lower letters are admitted but not number for example.
 
-        public async Task<IActionResult> Create([FromRoute] int stockId, CreateCommentRequestDto createComment)
+        // public async Task<IActionResult> Create([FromRoute] int stockId, CreateCommentRequestDto createComment)
+        public async Task<IActionResult> Create([FromRoute] string symbol, CreateCommentRequestDto createComment)
         {
 
             if (!ModelState.IsValid)//Controller Base provide the modelState and it has the porpuse of verify if all the Data Anotations Validations are ok or not 
             {
                 return BadRequest(ModelState);
             }
-            bool stockExists = await _stockRepository.StockExits(stockId);
-            if (!stockExists)
+            // bool stockExists = await _stockRepository.StockExits(stockId);//We remove this since we are going to search using the symbol and creating in the STOCK table the remainings stocks
+            var stockExists = await _stockRepository.GetBySymbolAsync(symbol);
+            if (stockExists == null)
             {
-                return BadRequest("Stock doesn't exist. ");
+                //We call the external endpoint FMP
+                var newStock = await _FMPService.FindStockBySymbolAsync(symbol);
+                //return BadRequest("Stock doesn't exist. ");
+                if (newStock == null)
+                {
+                    return BadRequest("Stock doesn't exist in the FMP service. ");
+                }
+
+                stockExists = await _stockRepository.CreateAsync(newStock);
             }
 
             var appUserz = User.GetUserName();
@@ -85,7 +99,8 @@ namespace api.Controllers
                 return BadRequest("User doesn't exists.");
             }
 
-            var createCommentmodel = createComment.ToCommentFromCreate(stockId, userManager.Id);
+            // var createCommentmodel = createComment.ToCommentFromCreate(stockId, userManager.Id);
+            var createCommentmodel = createComment.ToCommentFromCreate(stockExists.Id, userManager.Id);
             await _commentRepository.CreateAsync(createCommentmodel);
 
             return CreatedAtAction(nameof(GetById), new { id = createCommentmodel.Id }, createCommentmodel.ToCommentDto());
