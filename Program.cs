@@ -128,6 +128,16 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+#region Here we configure the CORS where we set the configuration for the deploy we set wich domains(www.pepe.com FE or localhost) are allowed to acces to the API, respect the order we should add this after the UseHttpRedirection()
+app.UseCors( x => x
+        .AllowAnyOrigin()
+        .AllowAnyHeader()
+        .AllowCredentials()
+        .WithOrigins("http://localhost:xxxxx")
+        .SetIsOriginAllowed(origin => true) ); 
+#endregion
+
+
 #region Identity and JWT  : Part of the implementation of the JWT and Identity
 app.UseAuthorization();
 #endregion

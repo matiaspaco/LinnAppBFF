@@ -5,10 +5,12 @@ using System.Threading.Tasks;
 using api.Data;
 using api.Dtos.Comment;
 using api.Extensions;
+using api.Helpers;
 using api.Interfaces;
 using api.Mappers;
 using api.Models;
 using api.Repository;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
@@ -38,13 +40,15 @@ namespace api.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllAsync()
+        [Authorize]
+        public async Task<IActionResult> GetAllAsync([FromQuery] CommentQueryObjects queryObject)//We add this QueryObjects with the AsQueryble in the CommnetRepository to be able to use diferrents methos to filter like the WHERE
         {
+            // public async Task<IActionResult> GetAllAsync()
             if (!ModelState.IsValid)//Controller Base provide the modelState and it has the porpuse of verify if all the Data Anotations Validations are ok or not 
             {
                 return BadRequest(ModelState);
             }
-            var commentModel = await _commentRepository.GetAllAsync();
+            var commentModel = await _commentRepository.GetAllAsync(queryObject);
             if (commentModel == null)
             {
                 //return null;
@@ -66,9 +70,9 @@ namespace api.Controllers
             return Ok(commentModel.ToCommentDto());
         }
 
-        // [HttpPost("{stockId:int}")]
+       
         [HttpPost("{symbol:alpha}")]//The alpha here is added to restrict in this case allows the upper and lower letters are admitted but not number for example.
-
+         // [HttpPost("{stockId:int}")]
         // public async Task<IActionResult> Create([FromRoute] int stockId, CreateCommentRequestDto createComment)
         public async Task<IActionResult> Create([FromRoute] string symbol, CreateCommentRequestDto createComment)
         {

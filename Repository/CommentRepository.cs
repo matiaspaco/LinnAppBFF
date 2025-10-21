@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using api.Data;
 using api.Dtos.Comment;
+using api.Helpers;
 using api.Interfaces;
 using api.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -18,9 +19,20 @@ namespace api.Repository
         {
             _context = context;
         }
-        public async Task<List<Comment>> GetAllAsync()
+        public async Task<List<Comment>> GetAllAsync(CommentQueryObjects queryObjects)
         {
-            return await _context.Comments.Include( x => x.appUser).ToListAsync();//Include allow us to bring the data from the other relationed table in this case AppUser
+            var comment = _context.Comments.Include(x => x.appUser).AsQueryable();
+            if (!string.IsNullOrEmpty(queryObjects.symbol))
+            {
+                comment = comment.Where(x => x.Stock.Symbol == queryObjects.symbol);
+            }
+
+            if (queryObjects.IsDecsending == true)
+            {
+                comment = comment.OrderByDescending(x => x.CreatedOn);
+            }
+            // return await _context.Comments.Include(x => x.appUser).ToListAsync();//Include allow us to bring the data from the other relationed table in this case AppUser
+            return await comment.ToListAsync();
         }
 
         public async Task<Comment?> GetByIdAsync(int id)
