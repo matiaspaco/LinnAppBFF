@@ -130,10 +130,11 @@ app.UseHttpsRedirection();
 
 #region Here we configure the CORS where we set the configuration for the deploy we set wich domains(www.pepe.com FE or localhost) are allowed to acces to the API, respect the order we should add this after the UseHttpRedirection()
 app.UseCors( x => x
-        .AllowAnyOrigin()
+        //.AllowAnyOrigin()
+        .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials()
-        .WithOrigins("http://localhost:xxxxx")
+        .WithOrigins("http://localhost:3000")
         .SetIsOriginAllowed(origin => true) ); 
 #endregion
 
