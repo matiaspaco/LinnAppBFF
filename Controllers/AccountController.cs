@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using api.Dtos.Account;
 using api.Interfaces;
 using api.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -37,24 +38,25 @@ namespace api.Controllers
 
             var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == loginDto.UserName.ToLower());
 
-            if (user == null)
+            if (user == null || user.LockoutEnabled)
             {
-                return Unauthorized("Invalid username");
+                return Unauthorized("User not found");
             }
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, loginDto.Password, false);
 
             if (!result.Succeeded)
-            {
+            {                
+                //await _userManager.AccessFailedAsync(user);
                 return Unauthorized("User Name not found and/ or password incorrect.");
             }
 
             return Ok(new NewUserDto
-                {
+            {
                 UserName = user.UserName,
                 Email = user.Email,
-                Token = _tokenService.CreateToken(user)                    
-                }
+                Token = _tokenService.CreateToken(user)
+            }
             );
         }
 
@@ -105,6 +107,78 @@ namespace api.Controllers
             catch (System.Exception e)
             {
                 return StatusCode(500, e);
+            }
+        }
+
+        [HttpPut("update")]
+        //[Authorize]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdateUserDto updateUserDto)
+        {
+
+            try
+            {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+                var user = await _userManager.Users.FirstOrDefaultAsync(x => x.UserName == updateUserDto.UserName.ToLower());
+                if (user == null || user.LockoutEnabled)
+                {
+                    return BadRequest("user not found.");
+                }
+
+                bool checkedPsw = await _userManager.CheckPasswordAsync(user!, updateUserDto.CurrentPassword!);
+                if (checkedPsw)
+                {
+                    var resultPswUpdate = await _userManager.ChangePasswordAsync(user!, updateUserDto.CurrentPassword!, updateUserDto.NewPassword!);
+                    if (!resultPswUpdate.Succeeded)
+                    {
+                        return BadRequest("An error ocurred during the password update.");
+                    }
+                    return Ok(new
+                    {
+                        UserName = user!.UserName,
+                        message = "Password updated successfully."
+                    });
+                }
+                else
+                {
+                    //return BadRequest("The current password doesn't match");
+                    
+                    return BadRequest("The current password doesn't match");
+                }
+            }
+            catch (System.Exception e)
+            {
+
+                return StatusCode(500, "An internal server error occurred.");
+            }
+        }
+
+        [HttpDelete("delete")]
+        //[Authorize]
+        public async Task<IActionResult> DeleteUser([FromBody] DeleteUserDto deleteUser)
+        {
+            var user = await _userManager.Users.FirstOrDefaultAsync(value => value.UserName == deleteUser.UserName!.ToLower());
+            if (user == null)
+                return NotFound($"{deleteUser.UserName} user not found.");
+
+            bool pswValid = await _userManager.CheckPasswordAsync(user, deleteUser.CurrentPassword!);
+            if (!pswValid)
+                return BadRequest($"{deleteUser.UserName} incorrect password.");
+
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.MaxValue;
+
+            var deletedObj = await _userManager.UpdateAsync(user);
+
+            if (deletedObj != null)
+            {
+                return Ok(new { message = "User deleted successfully." });
+            }
+            else
+            {
+                return BadRequest(new { message = "Error during the User delete proccess." });
             }
         }
     }

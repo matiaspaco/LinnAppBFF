@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using api.Dtos.Stock;
 using api.Interfaces;
@@ -29,7 +30,8 @@ namespace api.Service
         {
             try
             {
-                var result = await _httpClient.GetAsync($"https://financialmodelingprep.com/stable/profile?symbol={symbol}&apikey={_config["FMPKey"]}");//We took the API KEY value from the appsetting.json 
+                var encodedSymbol = WebUtility.UrlEncode(symbol);
+                var result = await _httpClient.GetAsync($"https://financialmodelingprep.com/stable/profile?symbol={encodedSymbol}&apikey={_config["FMPKey"]}");//We took the API KEY value from the appsetting.json 
                 if (result.IsSuccessStatusCode)
                 {
                     var content = await result.Content.ReadAsStringAsync();

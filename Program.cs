@@ -12,6 +12,13 @@ using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration.AddEnvironmentVariables();//Added to DEPLOY
+
+// #region Environment variable to Deploy in render
+// var allowedOrigins = builder.Configuration["AllowedOrigins"]?.Split(",") 
+//                      ?? new string[] { "http://localhost:3000" };
+// #endregion
+
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddControllers();
@@ -67,7 +74,16 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequiredLength = 12;
+
+    // options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
+    // options.Lockout.MaxFailedAccessAttempts = 2;
+    //options.Lockout.AllowedForNewUsers. = false;
+    options.User.RequireUniqueEmail = true;
+    options.Lockout.AllowedForNewUsers = false;
+    options.Lockout.MaxFailedAccessAttempts = 2;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(1);
 })
+
 .AddEntityFrameworkStores<ApplicationDBContext>();
 
 //HERE WE ADD THE SCHEMMES and configurations for JWT
@@ -129,11 +145,12 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 #region Here we configure the CORS where we set the configuration for the deploy we set wich domains(www.pepe.com FE or localhost) are allowed to acces to the API, respect the order we should add this after the UseHttpRedirection()
-app.UseCors( x => x
+app.UseCors(x => x
         //.AllowAnyOrigin()
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials()
+        //.WithOrigins(allowedOrigins));
         .WithOrigins("http://localhost:3000")
         .SetIsOriginAllowed(origin => true) ); 
 #endregion
