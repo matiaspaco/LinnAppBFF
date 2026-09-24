@@ -10,6 +10,6 @@ obj/
 # Settings 
 appsettings.json
 appsettings.*.json
-
+appsettingsProd.json
 # System
 .DS_Store

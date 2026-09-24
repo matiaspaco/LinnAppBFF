@@ -52,5 +52,64 @@ namespace api.Service
             }
         }
         #endregion
+
+        //Solo tengo que llamar apis, para eso tengo que entender como va a ser la llamada a mi backEn y con que parametros es decir que es lo que espero
+        //tner en cuenta promesas para esto por que tengo que esperar una respuesta de LAS apis al mismo tiempo y ahi ordenarlas.
+
+        public async Task<List<FMPStockDto>> FindStocksToBeJoined(string companyName)
+        {
+            var stockProfileCompleteList = new List<FMPStockDto>();
+            var encodedName = WebUtility.UrlEncode(companyName);
+            var stockNameList = await _httpClient.GetAsync($"https://financialmodelingprep.com/stable/search-name?query={encodedName}&limit=10&apikey={_config["FMPKey"]}");
+
+            if (stockNameList.IsSuccessStatusCode)
+            {
+                var content = await stockNameList.Content.ReadAsStringAsync();
+                var stockList = JsonConvert.DeserializeObject<FMPStockDto[]>(content);
+
+                foreach (var stockName in stockList!)
+                {
+                    var encodedSymbol = WebUtility.UrlEncode(stockName.symbol);
+
+                    var stockProfileResponse = await _httpClient.GetAsync($"https://financialmodelingprep.com/stable/profile?symbol={encodedSymbol}&apikey={_config["FMPKey"]}");
+                    var stockProfileContent = await stockProfileResponse.Content.ReadAsStringAsync();
+
+                    if (stockProfileContent == "[]")
+                    {
+                        FMPStockDto stockProfileComplete = new FMPStockDto
+                        {
+                            symbol = stockName.symbol,
+                            companyName = stockName.companyName,
+                            currency = stockName.currency,
+                            exchangeFullName = stockName.exchangeFullName,
+                            exchange = stockName.exchange,
+                            image = "",
+                            defaultImage = false
+                        };
+
+                        stockProfileCompleteList.Add(stockProfileComplete);
+                    }
+                    else
+                    {
+                        var stockProfileTask = JsonConvert.DeserializeObject<FMPStockDto[]>(stockProfileContent);
+                        var stockProfile = stockProfileTask![0];
+
+                        FMPStockDto stockProfileComplete = new FMPStockDto
+                        {
+                            symbol = stockName.symbol,
+                            companyName = stockName.companyName,
+                            currency = stockName.currency,
+                            exchangeFullName = stockName.exchangeFullName,
+                            exchange = stockName.exchange,
+                            image = stockProfile!.image,
+                            defaultImage = stockProfile.defaultImage
+                        };
+                        stockProfileCompleteList.Add(stockProfileComplete);
+                    }
+                }
+            }
+
+            return stockProfileCompleteList;
+        }
     }
 }

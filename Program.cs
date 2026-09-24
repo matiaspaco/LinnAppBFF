@@ -129,9 +129,15 @@ builder.Services.AddScoped<IPortfolioRepository, PortfolioRepository>();
 builder.Services.AddScoped<IFMPService, FMPService>();
 #endregion
 
+builder.Services.AddScoped<IGECKOService, GECKOService>();
+
 #region Dependency injection to use the HTTP funcionality at the moment the service call the external endpoint FMPService
-builder.Services.AddHttpClient<IFMPService, FMPService>();  
+builder.Services.AddHttpClient<IFMPService, FMPService>();
 #endregion
+
+builder.Services.AddHttpClient<IGECKOService, GECKOService>();
+
+//Crear la injeccion de dependencias del gecko por que sino usa la ruta del FMP
 
 var app = builder.Build();
 
